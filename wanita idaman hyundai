@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chef Burger Master - Mini Cooking Game</title>
+    <!-- Google Fonts & Tailwind CSS for modern UI -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        }
+        .ingredient-btn:active {
+            transform: scale(0.95);
+        }
+        @keyframes bounce-short {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .animate-bounce-short {
+            animation: bounce-short 0.6s ease infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Container Utama Game -->
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-amber-400">
+        
+        <!-- Header / Status Bar -->
+        <div class="bg-amber-500 text-white p-4 flex justify-between items-center shadow-md">
+            <div>
+                <h1 class="text-xl font-bold tracking-wide">🍔 Chef Master</h1>
+                <p class="text-xs text-amber-100">Layani pelanggan dengan cepat!</p>
+            </div>
+            <div class="text-right">
+                <span class="text-xs uppercase bg-amber-600 px-2 py-1 rounded-full font-semibold">Skor</span>
+                <p id="score" class="text-2xl font-ext500 font-bold">0</p>
+            </div>
+        </div>
+
+        <!-- Area Game / Panggung -->
+        <div class="p-6 flex flex-col items-center relative min-h-[400px] justify-between">
+            
+            <!-- Tampilan Awal / Menu -->
+            <div id="start-screen" class="absolute inset-0 bg-white/95 z-10 flex flex-col items-center justify-center p-6 text-center">
+                <div class="text-6xl mb-3 animate-bounce-short">🍔🍟</div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Siap Menjadi Koki Handal?</h2>
+                <p class="text-sm text-gray-500 mb-6">Susun bahan burger sesuai pesanan pelanggan sebelum waktunya habis!</p>
+                <button onclick="startGame()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition duration-200">
+                    Mulai Memasak! 🍳
+                </button>
+            </div>
+
+            <!-- Area Pelanggan & Pesanan -->
+            <div id="game-content" class="w-full flex flex-col items-center hidden">
+                <!-- Waktu / Timer Bar -->
+                <div class="w-full bg-gray-200 h-3 rounded-full overflow-hidden mb-4">
+                    <div id="timer-bar" class="bg-red-500 h-full w-full transition-all duration-100"></div>
+                </div>
+
+                <!-- Pelanggan & Pesanan -->
+                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 w-full flex items-center justify-between mb-6 shadow-inner">
+                    <div class="flex items-center gap-3">
+                        <div class="text-4xl">🧑‍🦰</div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-400">Pesanan Pelanggan:</p>
+                            <div id="target-order" class="flex gap-1 text-2xl mt-1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Area Burger yang Sedang Dirakit -->
+                <div class="w-full bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl h-48 flex flex-col-reverse items-center justify-start p-3 overflow-y-auto mb-6 gap-1" id="current-burger">
+                    <span id="empty-burger-text" class="text-sm text-gray-400 my-auto">Susun bahan di sini...</span>
+                </div>
+
+                <!-- Tombol Bahan-Bahan Makanan (Dapur) -->
+                <div class="w-full grid grid-cols-4 gap-2">
+                    <button onclick="addIngredient('🍞', 'bun')" class="ingredient-btn bg-amber-100 hover:bg-amber-200 p-3 rounded-xl flex flex-col items-center border border-amber-300 shadow-sm transition">
+                        <span class="text-2xl">🍞</span>
+                        <span class="text-[10px] font-semibold text-gray-600 mt-1">Roti</span>
+                    </button>
+                    <button onclick="addIngredient('🥩', 'meat')" class="ingredient-btn bg-red-100 hover:bg-red-200 p-3 rounded-xl flex flex-col items-center border border-red-300 shadow-sm transition">
+                        <span class="text-2xl">🥩</span>
+                        <span class="text-[10px] font-semibold text-gray-600 mt-1">Daging</span>
+                    </button>
+                    <button onclick="addIngredient('🧀', 'cheese')" class="ingredient-btn bg-yellow-100 hover:bg-yellow-200 p-3 rounded-xl flex flex-col items-center border border-yellow-300 shadow-sm transition">
+                        <span class="text-2xl">🧀</span>
+                        <span class="text-[10px] font-semibold text-gray-600 mt-1">Keju</span>
+                    </button>
+                    <button onclick="addIngredient('🥬', 'lettuce')" class="ingredient-btn bg-green-100 hover:bg-green-200 p-3 rounded-xl flex flex-col items-center border border-green-300 shadow-sm transition">
+                        <span class="text-2xl">🥬</span>
+                        <span class="text-[10px] font-semibold text-gray-600 mt-1">Selada</span>
+                    </button>
+                </div>
+
+                <!-- Tombol Aksi (Reset / Selesai) -->
+                <div class="w-full flex gap-2 mt-4">
+                    <button onclick="resetBurger()" class="w-1/3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 rounded-xl text-sm transition">Ulang</button>
+                    <button onclick="submitBurger()" class="w-2/3 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 rounded-xl text-sm shadow-md transition">Sajikan! 🚀</button>
+                </div>
+            </div>
+
+            <!-- Tampilan Game Over -->
+            <div id="game-over-screen" class="absolute inset-0 bg-white/95 z-10 flex flex-col items-center justify-center p-6 text-center hidden">
+                <div class="text-6xl mb-3">⌛</div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-1">Waktu Habis!</h2>
+                <p class="text-sm text-gray-500 mb-4">Pelanggan keburu marah dan pergi.</p>
+                <div class="bg-amber-100 px-6 py-3 rounded-2xl mb-6">
+                    <p class="text-xs text-amber-800 font-semibold">Skor Akhir Kamu</p>
+                    <p id="final-score" class="text-3xl font-ext500 font-bold text-amber-600">0</p>
+                </div>
+                <button onclick="startGame()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition duration-200">
+                    Main Lagi 🎮
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- JavaScript Logika Game -->
+    <script>
+        const ingredientsList = [
+            { icon: '🍞', name: 'bun' },
+            { icon: '🥩', name: 'meat' },
+            { icon: '🧀', name: 'cheese' },
+            { icon: '🥬', name: 'lettuce' }
+        ];
+
+        let score = 0;
+        let targetOrder = [];
+        let currentBurger = [];
+        let timeLeft = 100;
+        let gameInterval;
+        let isPlaying = false;
+
+        function startGame() {
+            score = 0;
+            document.getElementById('score').innerText = score;
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-over-screen').classList.add('hidden');
+            document.getElementById('game-content').classList.remove('hidden');
+            isPlaying = true;
+            nextOrder();
+        }
+
+        function nextOrder() {
+            currentBurger = [];
+            renderCurrentBurger();
+            
+            // Buat pesanan acak (panjang 3 sampai 4 bahan)
+            const orderLength = Math.floor(Math.random() * 2) + 3; // 3 atau 4 bahan
+            targetOrder = [];
+            for (let i = 0; i < orderLength; i++) {
+                const randomItem = ingredientsList[Math.floor(Math.random() * ingredientsList.length)];
+                targetOrder.push(randomItem);
+            }
+
+            renderTargetOrder();
+
+            // Reset Timer (10 detik per pesanan)
+            clearInterval(gameInterval);
+            timeLeft = 100;
+            
+            gameInterval = setInterval(() => {
+                if (!isPlaying) return;
+                timeLeft -= 1.5; // Kecepatan pengurangan waktu
+                document.getElementById('timer-bar').style.width = timeLeft + '%';
+
+                if (timeLeft <= 0) {
+                    gameOver();
+                }
+            }, 100);
+        }
+
+        function renderTargetOrder() {
+            const container = document.getElementById('target-order');
+            container.innerHTML = '';
+            targetOrder.forEach(item => {
+                const span = document.createElement('span');
+                span.innerText = item.icon;
+                container.appendChild(span);
+            });
+        }
+
+        function addIngredient(icon, name) {
+            if (!isPlaying) return;
+            currentBurger.push({ icon, name });
+            renderCurrentBurger();
+        }
+
+        function resetBurger() {
+            currentBurger = [];
+            renderCurrentBurger();
+        }
+
+        function renderCurrentBurger() {
+            const container = document.getElementById('current-burger');
+            container.innerHTML = '';
+
+            if (currentBurger.length === 0) {
+                container.innerHTML = '<span id="empty-burger-text" class="text-sm text-gray-400 my-auto">Susun bahan di sini...</span>';
+                return;
+            }
+
+            currentBurger.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'text-3xl animate-bounce-short transition-all';
+                div.innerText = item.icon;
+                container.appendChild(div);
+            });
+        }
+
+        function submitBurger() {
+            if (!isPlaying) return;
+
+            // Cek apakah susunan burger sama persis dengan target
+            if (currentBurger.length !== targetOrder.length) {
+                alert("Pesanan belum lengkap atau terlalu banyak!");
+                return;
+            }
+
+            let isMatch = true;
+            for (let i = 0; i < currentBurger.length; i++) {
+                if (currentBurger[i].name !== targetOrder[i].name) {
+                    isMatch = false;
+                    break;
+                }
+            }
+
+            if (isMatch) {
+                score += 10;
+                document.getElementById('score').innerText = score;
+                nextOrder();
+            } else {
+                alert("Susunan bahan salah! Perhatikan pesanannya.");
+                resetBurger();
+            }
+        }
+
+        function gameOver() {
+            isPlaying = false;
+            clearInterval(gameInterval);
+            document.getElementById('game-content').classList.add('hidden');
+            document.getElementById('game-over-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = score;
+        }
+    </script>
+</body>
+</html>
